@@ -1,8 +1,0 @@
-Flask
-Flask-CORS
-Flask-SQLAlchemy
-Flask-Login
-requests
-Flask-Marshmallow
-marshmallow-sqlalchemy
-python-weather
