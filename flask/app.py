@@ -2,20 +2,30 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from services.weatherAPI import get_weather
 from models.users import get_user, add_user, update_user_events
+import sqlite3
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)
+
+users_db = {
+    "username": "password" # Store a hashed password
+}
 
 @app.route('/login', methods=['POST'])
 def login():
-    """Login route for authenticating a user."""
-    username = request.json.get('username')
-    password = request.json.get('password')
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
-    user = get_user(username)
-    if user and user["password"] == password:
-        return jsonify({"message": "Login successful", "username": username}), 200
-    return jsonify({"message": "Invalid credentials"}), 401
+    if username not in users_db:
+        return jsonify({'message': 'Unauthorized'}), 401  # If username is not found
+
+    stored_password_hash = users_db[username]
+    
+    if password not in users_db:
+        return jsonify({'message': 'Unauthorized'}), 401  # If password is not found
+
+    return jsonify({'message': 'Login successful'}), 200
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -56,4 +66,4 @@ def weather(location):
     return jsonify({"message": "Weather data not found"}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)  
+    app.run(debug=True, port = 5000)  

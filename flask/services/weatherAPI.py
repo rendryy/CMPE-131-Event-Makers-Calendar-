@@ -5,7 +5,7 @@ def get_weather(location):
     try:
         response = requests.get(url)
         data = response.json()
-        return data["properties"]["periods"]  # List of forecast periods
+        return data["properties"]["periods"]
     except Exception as e:
         print(f"Error fetching weather data: {e}")
         return None

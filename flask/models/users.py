@@ -1,4 +1,4 @@
-import json
+##SQLITE IS USED FOR DATABASE 
 import os
 import sqlite3
 
@@ -8,11 +8,19 @@ def _connect_db():
     return sqlite3.connect(DATABASE_FILE)
 
 def get_user(username):
+    """Retrieve a user by username."""
     with _connect_db() as connection:
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
+        cursor.execute("SELECT username, password, userID FROM Users WHERE username = ?", (username,))
         user = cursor.fetchone()
-        return user
+        if user:
+            return 
+            {
+                "username": row[0],
+                "password": row[1], 
+                "userID": row[2]
+            }
+        return None
 
 
 def add_user(username, password):
@@ -20,11 +28,13 @@ def add_user(username, password):
     try:
         with _connect_db() as connection:
             cursor = connection.cursor()
+            # Exclude userID since it auto-increments
             cursor.execute("INSERT INTO Users (username, password) VALUES (?, ?)", (username, password))
             connection.commit()
-            return True
+            return cursor.lastrowid  # Return the new user's ID
     except sqlite3.IntegrityError:
-        return False
+        return None  # Return None if the username already exists
+
 
 def update_user_events(username, events):
     """Update a user's events in the SQLite database."""
