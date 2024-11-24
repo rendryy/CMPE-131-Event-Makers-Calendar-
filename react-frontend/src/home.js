@@ -11,11 +11,11 @@ const Home = () => {
        Login to start using the calendar application
       </p>
       <div className="home-buttons">
-        <Link to="./login" className="home-button">
+        <Link to="/login" className="home-button">
           Log In
         </Link>       
         <div className="register-link"></div>  
-        <Link to="./register" className="register-link">
+        <Link to="/register" className="register-link">
           Don't have an account? Click to here to register
         </Link>    
 

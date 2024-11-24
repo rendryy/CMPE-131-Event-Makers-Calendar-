@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { Route, useNavigate } from "react-router-dom";
 import './login.css';
+import {Link} from "react-router-dom"
 
 const Login = () =>
  {
@@ -12,12 +13,13 @@ const Login = () =>
   const [passwordError, setPasswordError] = useState('')
   const [error, setErrorMessage] = useState('')
   const navigate = useNavigate()
+
   const onButtonClick = async() => 
   {
    setUsernameError('')
     if ('' == username)
       {
-        setUsernameError('  Username cannot be blank')
+        setUsernameError('  Username/Password cannot be blank')
         return
       }
     setPasswordError('')
@@ -27,16 +29,14 @@ const Login = () =>
         return
       }
 
-
     try {
-        // Sending POST request to Flask API for authentication
         const response = await axios.post('http://localhost:5000/login', 
         {
           username: username,
           password: password
         });
   
-        if (response.status === 401) 
+        if (response.status === 200) 
         {
           navigate('/calendar');
         }
@@ -79,6 +79,12 @@ const Login = () =>
       <br />
       <div className={'inputContainer'}>
         <input className={'inputButton'} type="button" onClick={onButtonClick} value={'Log in'} />
+      </div>
+      <div>
+        <label className="errorlab">{error}</label>
+      </div>
+      <div>
+      <Link to="/home" className="btn btn-primary">Back</Link> 
       </div>
     </div>
   )

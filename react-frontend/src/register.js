@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, redirect, useRoutes, Route, Link } from "react-router-dom";
 import axios from "axios";
 import './register.css';
 
@@ -8,9 +8,11 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [usernameError, setUsernameError] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [input, setInput] = useState('')
   const [error, setErrorMessage] = useState('')
-
+  const [sucess, setSuccessMessage] = useState('')
   const navigate = useNavigate();
+
 
   const onButtonClick = async() =>
     {
@@ -26,6 +28,27 @@ const Register = () => {
             setPasswordError('  Password cannot be blank')
             return
           }
+    
+      try {
+        const response = await axios.post('http://localhost:5000/register', 
+        {
+          username: username,
+          password: password
+        });
+
+        if (response.status === 201) 
+        {
+          setSuccessMessage('Registration Successful!')
+          navigate('/login');
+        }
+        else
+        {
+          setErrorMessage('Login attempt failed')
+        }
+      } catch (error) {
+        setErrorMessage('Invalid username or password');
+        console.error('Login failed:', error);
+      }
     };
   return (
     <div className={'mainContainer'}>
@@ -37,7 +60,7 @@ const Register = () => {
         <input
           value={username}
           placeholder="Enter your username here"
-          onChange={(ev) => setUsername(ev.target.value)}
+          onChange={(event) => setUsername(event.target.value)}
           className={'inputBox'}
         />
         <label className="errorLabel">{usernameError}</label>
@@ -47,16 +70,22 @@ const Register = () => {
         <input
           value={password}
           placeholder="Enter your password here"
-          onChange={(ev) => setPassword(ev.target.value)}
+          onChange={(event) => setPassword(event.target.value)}
           className={'inputBox'}
         />
         <label className="errorLabel">{passwordError}</label>
       </div>
       <br />
       <div className={'inputContainer'}>
-        <input className={'inputButton'} type="button" onClick={onButtonClick} value={'Log in'} />
+        <input className={'inputButton'} type="button" onClick={onButtonClick} value={'Register'} />
       </div>
-    </div>
+      <div>
+      <Link to="/home" className="btn btn-primary">Back</Link> 
+      </div>
+        
+
+  </div>
+
   );
 };
 

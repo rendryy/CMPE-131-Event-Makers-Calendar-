@@ -1,26 +1,13 @@
 ##SQLITE IS USED FOR DATABASE 
 import os
 import sqlite3
-
+from flask_sqlalchemy import SQLAlchemy
 DATABASE_FILE = 'users.db'
+
 
 def _connect_db():
     return sqlite3.connect(DATABASE_FILE)
 
-def get_user(username):
-    """Retrieve a user by username."""
-    with _connect_db() as connection:
-        cursor = connection.cursor()
-        cursor.execute("SELECT username, password, userID FROM Users WHERE username = ?", (username,))
-        user = cursor.fetchone()
-        if user:
-            return 
-            {
-                "username": row[0],
-                "password": row[1], 
-                "userID": row[2]
-            }
-        return None
 
 
 def add_user(username, password):
@@ -28,12 +15,11 @@ def add_user(username, password):
     try:
         with _connect_db() as connection:
             cursor = connection.cursor()
-            # Exclude userID since it auto-increments
             cursor.execute("INSERT INTO Users (username, password) VALUES (?, ?)", (username, password))
             connection.commit()
-            return cursor.lastrowid  # Return the new user's ID
+            return cursor.lastrowid 
     except sqlite3.IntegrityError:
-        return None  # Return None if the username already exists
+        return None  
 
 
 def update_user_events(username, events):
@@ -41,7 +27,7 @@ def update_user_events(username, events):
     with _connect_db() as connection:
         cursor = connection.cursor()
 
-        cursor.execute("SELECT id FROM Users WHERE username = ?", (username,))
+        cursor.execute("SELECT id FROM User WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
             return False  

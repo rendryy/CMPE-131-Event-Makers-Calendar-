@@ -1,18 +1,15 @@
-import sqlite3
+import sqlite3 
+import requests
 
-# Connect to your database
-conn = sqlite3.connect('users.db')
-cursor = conn.cursor()
+url = "http://127.0.0.1:5000/login"
+payload = {
+    "username": "test1",
+    "password": "123"
+}
 
-# Check if the Users table exists
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='pinheads';")
-result = cursor.fetchone()
-if result:
-    print("Users table exists")
-else:
-    print("Users table does not exist")
+response = requests.post(url, json=payload)
+print("Status Code:", response.status_code)
+print("Response:", response.json())
 
- 
 
-conn.close()
 

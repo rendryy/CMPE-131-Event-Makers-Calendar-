@@ -1,44 +1,88 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
+from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from services.weatherAPI import get_weather
-from models.users import get_user, add_user, update_user_events
+from models.users import update_user_events
 import sqlite3
 
 app = Flask(__name__)
 CORS(app)
+#Make sure that the db file is correctly routed 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  
+app.config['SECRET_KEY'] = 'your-secret-key'
+#This is for the weather API which we can add later
+# BASE_URL = "https://api.weather.gov/gridpoints"
+db = SQLAlchemy(app)
 
-users_db = {
-    "username": "password" # Store a hashed password
-}
+class Users(db.Model):
+    __tablename__ = 'Users'
+    username = db.Column(db.Text, unique=True, nullable=False)
+    password = db.Column(db.Text, nullable=False)
+    userID = db.Column(db.Integer, primary_key=True, autoincrement = True)
+    events = db.relationship('Events', backref='user', lazy=True)
+class Events(db.Model):
+    __tablename__ = 'Events'
+    eventID = db.Column(db.Integer, primary_key = True, autoincrement = True)
+    title = db.Column(db.Text, unique = False, nullable = False)
+    description = db.Column(db.Text, nullable = True)
+    userID = db.Column(db.Integer, db.ForeignKey('Users.userID'), nullable=False)
+    StartTime = db.Column(db.DateTime, nullable = False)
+    EndTime = db.Column(db.DateTime, nullable = False)
+    location = db.Column(db.Text, nullable = True)
+
+with app.app_context():
+    db.create_all()
+def get_user(username):
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return 
+        {
+            "username": user.username,
+            "password": user.password
+        }
+    return None
+def add_user(username, password):
+    """Add a new user to the SQLite database."""
+    try:
+        with _connect_db() as connection:
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO Users (username, password) VALUES (?, ?)", (username, password))
+            connection.commit()
+            return cursor.lastrowid 
+    except sqlite3.IntegrityError:
+        return None      
 
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    user = Users.query.filter_by(username=username).first()
+    if not username:
+        return jsonify({"message": "Username is required"}), 400
 
-    if username not in users_db:
-        return jsonify({'message': 'Unauthorized'}), 401  # If username is not found
-
-    stored_password_hash = users_db[username]
-    
-    if password not in users_db:
-        return jsonify({'message': 'Unauthorized'}), 401  # If password is not found
+    if not password:
+        return jsonify({"message": "Password is required"}), 400
+    if not user:
+        return jsonify({"message": "Invalid username or password"}), 401
+    session['username'] = user.username
+    session['password'] = user.password
 
     return jsonify({'message': 'Login successful'}), 200
 
+
 @app.route('/register', methods=['POST'])
 def register():
-    """Register route for creating a new user."""
-    username = request.json.get('username')
-    password = request.json.get('password')
-
-    if get_user(username):
-        return jsonify({"message": "User already exists"}), 400
-    success = add_user(username, password)
-    if success:
-        return jsonify({"message": "User registered successfully"}), 201
-    return jsonify({"message": "Error in user registration"}), 500
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    if Users.query.filter_by(username=username).first():
+        return jsonify({"message": "Error in user registration"}), 500
+    new_user = Users(username = username, password = password)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "User registered successfully"}), 201
 
 @app.route('/events/<username>', methods=['GET', 'POST'])
 def events(username):
@@ -57,13 +101,11 @@ def events(username):
         return jsonify({"message": "Event added successfully"}), 201
     return jsonify({"message": "Error updating events"}), 500
 
-@app.route('/weather/<location>', methods=['GET'])
-def weather(location):
-    """Fetch weather data for a given location using the Weather.gov API."""
-    weather_data = get_weather(location)
-    if weather_data:
-        return jsonify(weather_data), 200
-    return jsonify({"message": "Weather data not found"}), 404
-
+@app.route('/logout')
+def logout():
+    """Logout the user by clearing the session."""
+    session.pop('user_id', None)  # Remove user_id from the session
+    return jsonify({'message': 'Logout successful'}), 200
+ 
 if __name__ == '__main__':
     app.run(debug=True, port = 5000)  
