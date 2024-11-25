@@ -38,6 +38,7 @@ const Login = () =>
   
         if (response.status === 200) 
         {
+          sessionStorage.setItem('username', username);
           navigate('/calendar');
         }
         else
@@ -69,9 +70,12 @@ const Login = () =>
       <br />
       <div className={'inputContainer'}>
         <input
+        type = "password"
+        id = "password"
           value={password}
           placeholder="Enter your password here"
           onChange={(ev) => setPassword(ev.target.value)}
+          required
           className={'inputBox'}
         />
         <label className="errorLabel">{passwordError}</label>

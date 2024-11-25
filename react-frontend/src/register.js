@@ -68,9 +68,12 @@ const Register = () => {
       <br />
       <div className={'inputContainer'}>
         <input
+        type = "password"
+        id = "password"
           value={password}
           placeholder="Enter your password here"
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(ev) => setPassword(ev.target.value)}
+          required
           className={'inputBox'}
         />
         <label className="errorLabel">{passwordError}</label>
