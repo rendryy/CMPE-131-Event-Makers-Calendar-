@@ -38,8 +38,8 @@ const Login = () =>
   
         if (response.status === 200) 
         {
-          sessionStorage.setItem('username', username);
           navigate('/calendar');
+          sessionStorage.setItem('username', username);
         }
         else
         {

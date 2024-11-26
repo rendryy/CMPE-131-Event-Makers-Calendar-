@@ -21,7 +21,7 @@ class Users(db.Model):
     __tablename__ = 'Users'
     username = db.Column(db.Text,primary_key=True, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
-    userID = db.Column(db.Integer, primary_key=True, autoincrement = True)
+    userID = db.Column(db.Integer, autoincrement = True)
     events = db.relationship('Events', backref='user', lazy=True)
 class Events(db.Model):
     __tablename__ = 'Events'
@@ -88,15 +88,13 @@ def register():
     db.session.commit()
     return jsonify({"message": "User registered successfully"}), 201
 
-@app.route('/events/<username>', methods=['GET', 'POST','DELETE'])
+@app.route('/events/<username>', methods=['GET', 'POST'])
 def events(username):
-    # Fetch the user from the database
     user = Users.query.filter_by(username=username).first()
     if not user:
         return jsonify({"message": "User not found"}), 404
 
     if request.method == 'GET':
-        # Fetch events linked to this user from the database
         events = Events.query.filter_by(username=username).all()
         event_list = [{
             'StartTime': event.StartTime,
@@ -104,12 +102,12 @@ def events(username):
             'title': event.title,
             'description': event.description,
             'location': event.location,
+            'eventID':event.eventID
         } for event in events]
 
         return jsonify({"events": event_list}), 200
 
     if request.method == 'POST':
-        # Extract event data from the request
         event_data = request.json.get('event')
         if not event_data:
             return jsonify({"message": "No event data provided"}), 400
@@ -124,7 +122,7 @@ def events(username):
             StartTime=start_time,
             EndTime=end_time,
             location=event_data.get('location'),
-            username=user.username
+            username=user.username,
         )
         db.session.add(new_event)
         db.session.commit()
@@ -132,31 +130,41 @@ def events(username):
         return jsonify({"message": "Event created successfully","eventID": new_event.eventID}), 201
     return jsonify({"message": "Event creation failure"}), 500
 
+@app.route('/events/<eventID>', methods=['PUT'])
+def update_event(eventID):
+    data = request.json
+    event = Events.query.filter_by(eventID=eventID).first()
+    if not event:
+        return jsonify({"message": "Event not found"}), 404
+    start_time = parse(data['StartTime'])
+    end_time = parse(data['EndTime'])
+    event.title = data.get("title", event.title)
+    event.description = data.get("description", event.description)
+    event.StartTime = start_time if start_time else event.StartTime
+    event.EndTime = end_time if end_time else event.EndTime
+    event.location = data.get("location", event.location)
+
+    db.session.commit()
+    return jsonify({"message": "Event updated successfully"}), 200
+
+
 @app.route('/events/<eventID>', methods=['DELETE'])
 def delete_event(eventID):
-    print(f"Received DELETE request for event ID: {eventID}")  # Debugging line
-    
-    username = get_current_user()  # Fetch the username of the logged-in user
-    
-    if not username:
-        return jsonify({"message": "User not logged in"}), 401
-    
-    # Find the event by eventID and username
-    event = Events.query.filter_by(eventID=eventID, username=username).first()
+    event = Events.query.filter_by(eventID=eventID).first()
     if not event:
         return jsonify({"message": "Event not found"}), 404
 
-    # Delete the event
     db.session.delete(event)
     db.session.commit()
-
+    print(f"Event ID {eventID} deleted successfully.") 
     return jsonify({"message": "Event deleted successfully"}), 200
+
 
     
 @app.route('/logout', methods=['POST'])
 def logout():
     """Logout the user by clearing the session."""
-    session.pop('username', None)  # Remove user_id from the session
+    session.pop('username', None) 
     return jsonify({'message': 'Logout successful'}), 200
  
 if __name__ == '__main__':

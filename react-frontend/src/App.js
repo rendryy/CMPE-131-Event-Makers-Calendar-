@@ -1,14 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./login";
-import Register from "./register";
-import Calendar1 from "./calendar";
-import Home from "./home";
-
-// Function to check if the user is authenticated
-const isAuthenticated = () => {
-  return sessionStorage.getItem("username") ? true : false;
-};
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from './home'; // Your Home component
+import Login from './login'; // Your Login component
+import Register from './register'; // Your Register component
+import Calendar1 from './calendar'; // Your Calendar component
+import PrivateRoute from './privateroute'; // Import your PrivateRoute component
 
 const App = () => {
   return (
@@ -18,11 +14,9 @@ const App = () => {
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        {/* Protect the /calendar route */}
         <Route
           path="/calendar"
-          element={isAuthenticated() ? <Calendar1 /> : <Navigate to="/login" />}
+          element={<PrivateRoute element={<Calendar1 />} />}
         />
       </Routes>
     </Router>

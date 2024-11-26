@@ -19,7 +19,7 @@ const Register = () => {
         setUsernameError('')
         if ('' == username)
           {
-            setUsernameError('  Username cannot be blank')
+            setUsernameError('  Username/Password cannot be blank')
             return
           }
         setPasswordError('')
@@ -35,7 +35,10 @@ const Register = () => {
           username: username,
           password: password
         });
-
+        if (response.status === 500)
+          {
+            setUsernameError('Username already in use')
+          }
         if (response.status === 201) 
         {
           setSuccessMessage('Registration Successful!')

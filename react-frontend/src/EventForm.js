@@ -37,6 +37,7 @@ const EventForm = ({ onEventCreated }) => {
         StartTime: new Date(eventData.startTime).toISOString(),
         EndTime: new Date(eventData.endTime).toISOString(),
         location: eventData.location,
+        id: eventData.eventID
       },
     };
     
